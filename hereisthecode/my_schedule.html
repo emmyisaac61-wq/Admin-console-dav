@@ -281,7 +281,7 @@
 
             <div class="card-section">
                 <div class="section-header">
-                    <h3 class="section-title">Assigned Modules</h3>
+                    <h3 class="section-title" id="assignedModulesTitle">Assigned Modules</h3>
                 </div>
                 <div style="overflow-x: auto;">
                     <table class="data-table">
@@ -293,26 +293,7 @@
                                 <th>Alert Status</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            <tr>
-                                <td><strong>Monday</strong><br><span style="font-size:12px; color:var(--text-muted);">09:00 AM - 11:00 AM</span></td>
-                                <td>Advanced Network Architecture</td>
-                                <td>Lab Suite A</td>
-                                <td><span class="badge active">Automation On</span></td>
-                            </tr>
-                            <tr>
-                                <td><strong>Tuesday</strong><br><span style="font-size:12px; color:var(--text-muted);">10:30 AM - 12:30 PM</span></td>
-                                <td>Database Systems & Concurrency</td>
-                                <td>Main Hall 2</td>
-                                <td><span class="badge upcoming">Queued</span></td>
-                            </tr>
-                            <tr>
-                                <td><strong>Thursday</strong><br><span style="font-size:12px; color:var(--text-muted);">01:00 PM - 03:00 PM</span></td>
-                                <td>Systems Design Practicum</td>
-                                <td>Main Hall 2</td>
-                                <td><span class="badge upcoming">Queued</span></td>
-                            </tr>
-                        </tbody>
+                        <tbody id="scheduleTableBody"></tbody>
                     </table>
                 </div>
             </div>
@@ -321,6 +302,54 @@
     </div>
 
     <script>
+        const timetableStorageKey = 'lesson_notify_timetable_entries';
+        const defaultTeacherSchedule = [
+            { id: 1, day: 'Monday', time: '09:00 AM - 11:00 AM', course: 'Advanced Network Architecture', instructor: 'Dr. Samuel K.', venue: 'Lab Suite A', status: 'Automation On' },
+            { id: 2, day: 'Tuesday', time: '10:30 AM - 12:30 PM', course: 'Database Systems & Concurrency', instructor: 'Prof. Adaeze O.', venue: 'Main Hall 2', status: 'Queued' },
+            { id: 3, day: 'Thursday', time: '01:00 PM - 03:00 PM', course: 'Systems Design Practicum', instructor: 'Dr. Samuel K.', venue: 'Main Hall 2', status: 'Queued' }
+        ];
+
+        function getTeacherScheduleEntries() {
+            try {
+                const saved = JSON.parse(localStorage.getItem(timetableStorageKey) || 'null');
+                if (Array.isArray(saved) && saved.length) {
+                    return saved;
+                }
+                return defaultTeacherSchedule;
+            } catch (error) {
+                return defaultTeacherSchedule;
+            }
+        }
+
+        function renderTeacherSchedule() {
+            const teacherName = localStorage.getItem('ln_user_name') || 'Instructor';
+            const tableBody = document.getElementById('scheduleTableBody');
+            const title = document.getElementById('assignedModulesTitle');
+
+            const entries = getTeacherScheduleEntries().filter(item => {
+                const matchesTeacher = item.instructor === teacherName || teacherName === 'Instructor';
+                return matchesTeacher;
+            });
+
+            if (title) {
+                title.textContent = entries.length ? `Assigned Modules for ${teacherName}` : 'Assigned Modules';
+            }
+
+            if (!entries.length) {
+                tableBody.innerHTML = '<tr><td colspan="4"><div style="padding: 24px 8px; text-align: center; color: var(--text-muted);">No timetable entries are assigned to this instructor yet.</div></td></tr>';
+                return;
+            }
+
+            tableBody.innerHTML = entries.map(item => `
+                <tr>
+                    <td><strong>${item.day}</strong><br><span style="font-size:12px; color:var(--text-muted);">${item.time}</span></td>
+                    <td>${item.course}</td>
+                    <td>${item.venue}</td>
+                    <td><span class="badge ${item.status === 'Automation On' ? 'active' : 'upcoming'}">${item.status}</span></td>
+                </tr>
+            `).join('');
+        }
+
         const savedTheme = localStorage.getItem('lesson_notify_theme'); 
         if (savedTheme === 'light') { document.body.classList.add('light-mode'); }
 
@@ -331,6 +360,8 @@
             localStorage.clear();
             window.location.href = 'auth.html?mode=signin';
         });
+
+        renderTeacherSchedule();
     </script>
 </body>
 </html>
