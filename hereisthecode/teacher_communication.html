@@ -364,13 +364,80 @@
         const savedTheme = localStorage.getItem('lesson_notify_theme'); 
         if (savedTheme === 'light') { document.body.classList.add('light-mode'); }
 
-        const adminName = localStorage.getItem('ln_user_name') || 'Workspace Admin';
-        document.getElementById('adminNameDisplay').textContent = adminName;
+        const teacherName = localStorage.getItem('ln_user_name') || 'Zeeno Moveh';
+        document.getElementById('teacherNameDisplay').textContent = teacherName;
+
+        const broadcastStorageKey = 'lesson_notify_teacher_broadcasts';
+        const defaultBroadcasts = [
+            { target: 'Advanced Network Architecture', channel: 'SMS & Email Notification', message: 'Lab Suite A session starts at 08:00 AM. Please arrive 5 minutes early.', date: 'Yesterday' },
+            { target: 'Systems Design Practicum', channel: 'SMS & Email Notification', message: 'Lecture slides for Main Hall 2 have been uploaded to the portal.', date: 'Aug 10' },
+            { target: 'Data Structures', channel: 'SMS & Email Notification', message: 'Reminder about the upcoming virtual Zoom session scheduled for 03:00 PM.', date: 'Aug 08' }
+        ];
+
+        function getBroadcasts() {
+            try {
+                const saved = JSON.parse(localStorage.getItem(broadcastStorageKey) || 'null');
+                return Array.isArray(saved) && saved.length ? saved : defaultBroadcasts;
+            } catch (error) {
+                return defaultBroadcasts;
+            }
+        }
+
+        function saveBroadcasts(items) {
+            localStorage.setItem(broadcastStorageKey, JSON.stringify(items));
+        }
+
+        function renderBroadcasts() {
+            const container = document.querySelector('.history-item')?.parentElement;
+            if (!container) return;
+
+            const existingHistory = container.querySelectorAll('.history-item');
+            existingHistory.forEach(item => item.remove());
+
+            const broadcasts = getBroadcasts();
+            broadcasts.forEach(item => {
+                const history = document.createElement('div');
+                history.className = 'history-item';
+                history.innerHTML = `
+                    <div class="history-content">
+                        <h4>${item.target}</h4>
+                        <p>${item.message}</p>
+                    </div>
+                    <span class="history-meta">${item.date}</span>
+                `;
+                container.appendChild(history);
+            });
+        }
+
+        document.querySelector('.btn-primary')?.addEventListener('click', function () {
+            const target = document.querySelectorAll('.form-control')[0]?.value || 'All Enrolled Students';
+            const channel = document.querySelectorAll('.form-control')[1]?.value || 'SMS & Email Notification';
+            const message = document.querySelectorAll('.form-control')[2]?.value.trim();
+
+            if (!message) {
+                alert('Please type a message before sending the broadcast.');
+                return;
+            }
+
+            const next = [{
+                target,
+                channel,
+                message,
+                date: 'Just now'
+            }, ...getBroadcasts()];
+
+            saveBroadcasts(next);
+            renderBroadcasts();
+            document.querySelectorAll('.form-control')[2].value = '';
+            alert('Broadcast sent successfully to your students!');
+        });
 
         document.getElementById('btnLogout').addEventListener('click', () => {
             localStorage.clear();
             window.location.href = 'auth.html?mode=signin';
         });
+
+        renderBroadcasts();
     </script>
 </body>
 </html>
