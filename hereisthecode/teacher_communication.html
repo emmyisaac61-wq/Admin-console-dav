@@ -298,7 +298,7 @@
                     
                     <div class="form-group">
                         <label class="form-label">Target Class / Track</label>
-                        <select class="form-control">
+                        <select id="broadcastTarget" class="form-control">
                             <option>All Enrolled Students (128)</option>
                             <option>Advanced Network Architecture</option>
                             <option>Systems Design Practicum</option>
@@ -307,7 +307,7 @@
                     </div>
                     <div class="form-group">
                         <label class="form-label">Delivery Channel</label>
-                        <select class="form-control">
+                        <select id="broadcastChannel" class="form-control">
                             <option>SMS & Email Notification</option>
                             <option>SMS Only</option>
                             <option>Email Only</option>
@@ -315,9 +315,9 @@
                     </div>
                     <div class="form-group">
                         <label class="form-label">Message Announcement</label>
-                        <textarea class="form-control" placeholder="Type your message to students here..."></textarea>
+                        <textarea id="broadcastMessage" class="form-control" placeholder="Type your message to students here..."></textarea>
                     </div>
-                    <button class="btn-primary" onclick="alert('Broadcast sent successfully to your students!')">Send Broadcast</button>
+                    <button type="button" id="sendBroadcastBtn" class="btn-primary">Send Broadcast</button>
                 </div>
 
                 <!-- Right Column: Recent Broadcast History -->
@@ -409,10 +409,15 @@
             });
         }
 
-        document.querySelector('.btn-primary')?.addEventListener('click', function () {
-            const target = document.querySelectorAll('.form-control')[0]?.value || 'All Enrolled Students';
-            const channel = document.querySelectorAll('.form-control')[1]?.value || 'SMS & Email Notification';
-            const message = document.querySelectorAll('.form-control')[2]?.value.trim();
+        const sendBroadcastBtn = document.getElementById('sendBroadcastBtn');
+        const broadcastTarget = document.getElementById('broadcastTarget');
+        const broadcastChannel = document.getElementById('broadcastChannel');
+        const broadcastMessage = document.getElementById('broadcastMessage');
+
+        sendBroadcastBtn?.addEventListener('click', function () {
+            const target = broadcastTarget?.value || 'All Enrolled Students (128)';
+            const channel = broadcastChannel?.value || 'SMS & Email Notification';
+            const message = broadcastMessage?.value.trim();
 
             if (!message) {
                 alert('Please type a message before sending the broadcast.');
@@ -428,7 +433,7 @@
 
             saveBroadcasts(next);
             renderBroadcasts();
-            document.querySelectorAll('.form-control')[2].value = '';
+            broadcastMessage.value = '';
             alert('Broadcast sent successfully to your students!');
         });
 
