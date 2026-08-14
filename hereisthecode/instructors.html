@@ -96,6 +96,19 @@
         .btn-invite { background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); }
         .btn-invite:hover { background: rgba(16, 185, 129, 0.2); }
 
+        .modal { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; background: rgba(2, 6, 23, 0.7); backdrop-filter: blur(4px); z-index: 1000; }
+        .modal.open { display: flex; }
+        .modal-card { width: min(520px, 92vw); background: rgba(15, 23, 42, 0.98); border: 1px solid var(--border-color); border-radius: 16px; box-shadow: 0 30px 80px rgba(0,0,0,0.45); padding: 24px; }
+        .modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+        .modal-title { font-size: 20px; font-weight: 700; }
+        .close-btn { background: transparent; color: var(--text-muted); border: 1px solid var(--border-color); width: 32px; height: 32px; border-radius: 50%; cursor: pointer; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+        .field { display: flex; flex-direction: column; gap: 6px; }
+        .field label { font-size: 12px; font-weight: 600; color: var(--text-muted); }
+        .field input, .field select { width: 100%; background: var(--input-bg); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 8px; padding: 10px 12px; font-size: 13.5px; }
+        .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 12px; }
+        .btn-secondary { background: transparent; color: var(--text-main); border: 1px solid var(--border-color); padding: 9px 14px; border-radius: 8px; cursor: pointer; }
+
         .toolbar { display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap; align-items: center; justify-content: space-between; }
         .toolbar-group { display: flex; gap: 10px; align-items: center; }
         .form-control { background: var(--input-bg); border: 1px solid var(--border-color); color: var(--text-main); padding: 9px 14px; border-radius: 6px; font-size: 13.5px; outline: none; transition: 0.2s; }
@@ -209,7 +222,7 @@
                     <h1>Faculty Management</h1>
                     <p>View instructor details, monitor online status, and invite faculty to create Lesson Notify accounts.</p>
                 </div>
-                <button class="btn-primary" onclick="alert('Opening Add Instructor form...')">
+                <button class="btn-primary" id="openInstructorModalBtn" type="button">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
                     Add Instructor
                 </button>
@@ -218,20 +231,20 @@
             <!-- Filter & Search Toolbar -->
             <div class="toolbar">
                 <div class="toolbar-group">
-                    <select class="form-control">
+                    <select class="form-control" id="departmentFilter">
                         <option value="all">All Departments</option>
-                        <option value="cs">Computer Science</option>
-                        <option value="engineering">Engineering</option>
-                        <option value="design">Arts & Design</option>
+                        <option value="Computer Science">Computer Science</option>
+                        <option value="Engineering">Engineering</option>
+                        <option value="Arts & Design">Arts & Design</option>
                     </select>
-                    <select class="form-control">
+                    <select class="form-control" id="statusFilter">
                         <option value="all">All Statuses</option>
                         <option value="registered">Registered</option>
                         <option value="unregistered">Needs Invite</option>
                     </select>
                 </div>
                 <div>
-                    <input type="text" class="form-control" placeholder="Search by name, email or phone..." style="width: 260px;">
+                    <input type="text" class="form-control" id="instructorSearch" placeholder="Search by name, email or phone..." style="width: 260px;">
                 </div>
             </div>
 
@@ -247,129 +260,205 @@
                             <th style="text-align: right;">Actions</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        <!-- Registered / Online -->
-                        <tr>
-                            <td>
-                                <div class="instructor-profile">
-                                    <div class="avatar purple">
-                                        SK
-                                        <div class="status-dot online" title="Online Now"></div>
-                                    </div>
-                                    <div class="instructor-details">
-                                        <span class="instructor-name">Dr. Samuel K.</span>
-                                        <span class="instructor-role">Senior Lecturer</span>
-                                    </div>
-                                </div>
-                            </td>
-                            <td>
-                                <div style="font-size: 13px;">samuel.k@university.edu</div>
-                                <div style="font-size: 12px; color: var(--text-muted);">+234 801 234 5678</div>
-                            </td>
-                            <td>Computer Science</td>
-                            <td><span class="badge registered">Registered</span></td>
-                            <td style="text-align: right; white-space: nowrap;">
-                                <button class="btn-subtle" style="margin-right: 5px;">View Schedule</button>
-                                <button class="btn-subtle">Edit</button>
-                            </td>
-                        </tr>
-
-                        <!-- Unregistered / Offline -->
-                        <tr>
-                            <td>
-                                <div class="instructor-profile">
-                                    <div class="avatar orange">
-                                        SJ
-                                        <div class="status-dot offline" title="Offline"></div>
-                                    </div>
-                                    <div class="instructor-details">
-                                        <span class="instructor-name">Sarah Jenkins</span>
-                                        <span class="instructor-role">Adjunct Professor</span>
-                                    </div>
-                                </div>
-                            </td>
-                            <td>
-                                <div style="font-size: 13px;">s.jenkins@university.edu</div>
-                                <div style="font-size: 12px; color: var(--text-muted);">+234 802 345 6789</div>
-                            </td>
-                            <td>Arts & Design</td>
-                            <td><span class="badge unregistered">No Account</span></td>
-                            <td style="text-align: right; white-space: nowrap;">
-                                <button class="btn-subtle btn-invite" style="margin-right: 5px;" onclick="alert('Invitation link sent to s.jenkins@university.edu via Email and SMS.')">Send Invite</button>
-                                <button class="btn-subtle">Edit</button>
-                            </td>
-                        </tr>
-
-                        <!-- Registered / Offline -->
-                        <tr>
-                            <td>
-                                <div class="instructor-profile">
-                                    <div class="avatar emerald">
-                                        AO
-                                        <div class="status-dot offline" title="Offline"></div>
-                                    </div>
-                                    <div class="instructor-details">
-                                        <span class="instructor-name">Prof. Adaeze O.</span>
-                                        <span class="instructor-role">Department Head</span>
-                                    </div>
-                                </div>
-                            </td>
-                            <td>
-                                <div style="font-size: 13px;">adaeze.o@university.edu</div>
-                                <div style="font-size: 12px; color: var(--text-muted);">+234 803 456 7890</div>
-                            </td>
-                            <td>Computer Science</td>
-                            <td><span class="badge registered">Registered</span></td>
-                            <td style="text-align: right; white-space: nowrap;">
-                                <button class="btn-subtle" style="margin-right: 5px;">View Schedule</button>
-                                <button class="btn-subtle">Edit</button>
-                            </td>
-                        </tr>
-
-                        <!-- Registered / Online -->
-                        <tr>
-                            <td>
-                                <div class="instructor-profile">
-                                    <div class="avatar">
-                                        TM
-                                        <div class="status-dot online" title="Online Now"></div>
-                                    </div>
-                                    <div class="instructor-details">
-                                        <span class="instructor-name">Engr. Tobi M.</span>
-                                        <span class="instructor-role">Lecturer I</span>
-                                    </div>
-                                </div>
-                            </td>
-                            <td>
-                                <div style="font-size: 13px;">tobi.m@university.edu</div>
-                                <div style="font-size: 12px; color: var(--text-muted);">+234 804 567 8901</div>
-                            </td>
-                            <td>Engineering</td>
-                            <td><span class="badge registered">Registered</span></td>
-                            <td style="text-align: right; white-space: nowrap;">
-                                <button class="btn-subtle" style="margin-right: 5px;">View Schedule</button>
-                                <button class="btn-subtle">Edit</button>
-                            </td>
-                        </tr>
-                    </tbody>
+                    <tbody id="instructorTableBody"></tbody>
                 </table>
             </div>
 
         </div>
     </div>
 
+    <div class="modal" id="instructorModal" aria-hidden="true">
+        <div class="modal-card" style="background: rgba(15,23,42,0.98);">
+            <div class="modal-header">
+                <h2 class="modal-title">Add instructor</h2>
+                <button type="button" class="close-btn" id="closeInstructorModalBtn" aria-label="Close modal">×</button>
+            </div>
+            <form id="instructorForm">
+                <div class="form-row">
+                    <div class="field">
+                        <label for="firstNameInput">Full name</label>
+                        <input id="firstNameInput" type="text" placeholder="e.g. Dr. Ada Osei" required>
+                    </div>
+                    <div class="field">
+                        <label for="roleInput">Title / Role</label>
+                        <input id="roleInput" type="text" placeholder="e.g. Senior Lecturer" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="field">
+                        <label for="emailInput">Email</label>
+                        <input id="emailInput" type="email" placeholder="name@school.edu" required>
+                    </div>
+                    <div class="field">
+                        <label for="phoneInput">Phone</label>
+                        <input id="phoneInput" type="tel" placeholder="+234 ..." required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="field">
+                        <label for="departmentInput">Department</label>
+                        <select id="departmentInput" required>
+                            <option value="Computer Science">Computer Science</option>
+                            <option value="Engineering">Engineering</option>
+                            <option value="Arts & Design">Arts & Design</option>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label for="accountInput">Account status</label>
+                        <select id="accountInput">
+                            <option value="registered">Registered</option>
+                            <option value="unregistered">Needs Invite</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn-secondary" id="cancelInstructorBtn">Cancel</button>
+                    <button type="submit" class="btn-primary">Save Instructor</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script>
-        // Check for Light Mode
-        const savedTheme = localStorage.getItem('lesson_notify_theme'); 
-        if (savedTheme === 'light') { document.body.classList.add('light-mode'); }
+        const instructorStorageKey = 'lesson_notify_instructors';
+        const defaultInstructors = [
+            { id: 1, name: 'Dr. Samuel K.', role: 'Senior Lecturer', email: 'samuel.k@university.edu', phone: '+234 801 234 5678', department: 'Computer Science', status: 'registered', online: true },
+            { id: 2, name: 'Sarah Jenkins', role: 'Adjunct Professor', email: 's.jenkins@university.edu', phone: '+234 802 345 6789', department: 'Arts & Design', status: 'unregistered', online: false },
+            { id: 3, name: 'Prof. Adaeze O.', role: 'Department Head', email: 'adaeze.o@university.edu', phone: '+234 803 456 7890', department: 'Computer Science', status: 'registered', online: false },
+            { id: 4, name: 'Engr. Tobi M.', role: 'Lecturer I', email: 'tobi.m@university.edu', phone: '+234 804 567 8901', department: 'Engineering', status: 'registered', online: true }
+        ];
+
+        function getInstructors() {
+            try {
+                const saved = JSON.parse(localStorage.getItem(instructorStorageKey) || 'null');
+                return Array.isArray(saved) && saved.length ? saved : defaultInstructors;
+            } catch (error) {
+                return defaultInstructors;
+            }
+        }
+
+        function saveInstructors(instructors) {
+            localStorage.setItem(instructorStorageKey, JSON.stringify(instructors));
+        }
+
+        function initials(name) {
+            return name.split(' ').filter(Boolean).slice(0, 2).map(part => part[0].toUpperCase()).join('') || 'IN';
+        }
+
+        function renderInstructors() {
+            const tbody = document.getElementById('instructorTableBody');
+            const search = (document.getElementById('instructorSearch')?.value || '').toLowerCase();
+            const department = document.getElementById('departmentFilter')?.value || 'all';
+            const status = document.getElementById('statusFilter')?.value || 'all';
+
+            const filtered = getInstructors().filter(item => {
+                const matchesSearch = !search || [item.name, item.email, item.phone, item.role].join(' ').toLowerCase().includes(search);
+                const matchesDepartment = department === 'all' || item.department === department;
+                const matchesStatus = status === 'all' || item.status === status;
+                return matchesSearch && matchesDepartment && matchesStatus;
+            });
+
+            if (!filtered.length) {
+                tbody.innerHTML = '<tr><td colspan="5"><div style="padding: 30px 16px; color: var(--text-muted); text-align: center;">No instructors match your current filters.</div></td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = filtered.map(item => `
+                <tr>
+                    <td>
+                        <div class="instructor-profile">
+                            <div class="avatar ${item.online ? 'purple' : item.status === 'registered' ? 'emerald' : 'orange'}">
+                                ${initials(item.name)}
+                                <span class="status-dot ${item.online ? 'online' : 'offline'}"></span>
+                            </div>
+                            <div class="instructor-details">
+                                <span class="instructor-name">${item.name}</span>
+                                <span class="instructor-role">${item.role}</span>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <div style="font-size: 13px;">${item.email}</div>
+                        <div style="font-size: 12px; color: var(--text-muted);">${item.phone}</div>
+                    </td>
+                    <td>${item.department}</td>
+                    <td><span class="badge ${item.status === 'registered' ? 'registered' : 'unregistered'}">${item.status === 'registered' ? 'Registered' : 'No Account'}</span></td>
+                    <td style="text-align: right; white-space: nowrap;">
+                        <button class="btn-subtle btn-invite" type="button" style="margin-right: 6px;" onclick="sendInvite('${item.email}')">${item.status === 'registered' ? 'Invite' : 'Send Invite'}</button>
+                        <button class="btn-subtle" type="button" onclick="removeInstructor(${item.id})">Remove</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function sendInvite(email) {
+            alert('Invitation sent to ' + email);
+        }
+
+        function removeInstructor(id) {
+            const next = getInstructors().filter(item => item.id !== id);
+            saveInstructors(next);
+            renderInstructors();
+        }
+
+        function openInstructorModal() {
+            const modal = document.getElementById('instructorModal');
+            if (!modal) return;
+            modal.classList.add('open');
+            modal.setAttribute('aria-hidden', 'false');
+        }
+
+        function closeInstructorModal() {
+            const modal = document.getElementById('instructorModal');
+            if (!modal) return;
+            modal.classList.remove('open');
+            modal.setAttribute('aria-hidden', 'true');
+            document.getElementById('instructorForm').reset();
+        }
+
+        document.getElementById('openInstructorModalBtn')?.addEventListener('click', openInstructorModal);
+        document.getElementById('closeInstructorModalBtn')?.addEventListener('click', closeInstructorModal);
+        document.getElementById('cancelInstructorBtn')?.addEventListener('click', closeInstructorModal);
+
+        document.getElementById('instructorForm')?.addEventListener('submit', function (event) {
+            event.preventDefault();
+            const newItem = {
+                id: Date.now(),
+                name: document.getElementById('firstNameInput').value.trim(),
+                role: document.getElementById('roleInput').value.trim(),
+                email: document.getElementById('emailInput').value.trim(),
+                phone: document.getElementById('phoneInput').value.trim(),
+                department: document.getElementById('departmentInput').value,
+                status: document.getElementById('accountInput').value,
+                online: false
+            };
+
+            if (!newItem.name || !newItem.role || !newItem.email || !newItem.phone) return;
+            const list = getInstructors();
+            list.unshift(newItem);
+            saveInstructors(list);
+            renderInstructors();
+            closeInstructorModal();
+        });
+
+        document.getElementById('instructorSearch')?.addEventListener('input', renderInstructors);
+        document.getElementById('departmentFilter')?.addEventListener('change', renderInstructors);
+        document.getElementById('statusFilter')?.addEventListener('change', renderInstructors);
+
+        const savedTheme = localStorage.getItem('lesson_notify_theme');
+        if (savedTheme === 'light') {
+            document.body.classList.add('light-mode');
+        }
 
         const adminName = localStorage.getItem('ln_user_name') || 'Workspace Admin';
         document.getElementById('adminNameDisplay').textContent = adminName;
 
         document.getElementById('btnLogout').addEventListener('click', () => {
             localStorage.clear();
-            window.location.href = '/login?mode=signin';
+            window.location.href = 'auth.html?mode=signin';
         });
+
+        renderInstructors();
     </script>
 </body>
 </html>

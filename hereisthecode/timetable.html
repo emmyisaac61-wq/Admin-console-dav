@@ -224,6 +224,19 @@
             background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border-color); color: var(--text-alt); padding: 6px 12px; border-radius: 6px; font-size: 12px; cursor: pointer; transition: 0.2s;
         }
         .btn-subtle:hover { background: rgba(255, 255, 255, 0.1); }
+
+        .modal { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; background: rgba(2, 6, 23, 0.7); backdrop-filter: blur(4px); z-index: 1000; }
+        .modal.open { display: flex; }
+        .modal-card { width: min(520px, 92vw); background: rgba(15, 23, 42, 0.98); border: 1px solid var(--border-color); border-radius: 16px; box-shadow: 0 30px 80px rgba(0,0,0,0.45); padding: 24px; }
+        .modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+        .modal-title { font-size: 20px; font-weight: 700; }
+        .close-btn { background: transparent; color: var(--text-muted); border: 1px solid var(--border-color); width: 32px; height: 32px; border-radius: 50%; cursor: pointer; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+        .field { display: flex; flex-direction: column; gap: 6px; }
+        .field label { font-size: 12px; font-weight: 600; color: var(--text-muted); }
+        .field input, .field select { width: 100%; background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 8px; padding: 10px 12px; font-size: 13.5px; }
+        .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 12px; }
+        .btn-secondary { background: transparent; color: var(--text-main); border: 1px solid var(--border-color); padding: 9px 14px; border-radius: 8px; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -304,29 +317,28 @@
                     <h1>Master Schedule Controller</h1>
                     <p>Configure recurring module intervals, automate pre-lesson warning notifications, and manage hall/link allocations.</p>
                 </div>
-                <button class="btn-action" onclick="alert('Open New Timetable Creator Modal')">+ Create Timetable Entry</button>
+                <button class="btn-action" id="openTimetableModalBtn" type="button">+ Create Timetable Entry</button>
             </div>
 
             <!-- Filter & Search Bar -->
             <div class="filter-toolbar">
                 <div class="filter-group">
-                    <select class="filter-select">
+                    <select class="filter-select" id="dayFilter">
                         <option value="all">All Days (Mon - Sat)</option>
-                        <option value="mon">Monday</option>
-                        <option value="tue">Tuesday</option>
-                        <option value="wed">Wednesday</option>
-                        <option value="thu">Thursday</option>
-                        <option value="fri">Friday</option>
+                        <option value="Monday">Monday</option>
+                        <option value="Tuesday">Tuesday</option>
+                        <option value="Wednesday">Wednesday</option>
+                        <option value="Thursday">Thursday</option>
+                        <option value="Friday">Friday</option>
                     </select>
-                    <select class="filter-select">
-                        <option value="all">All Tracks / Departments</option>
-                        <option value="tech">Software Engineering</option>
-                        <option value="design">UI/UX Product Design</option>
-                        <option value="data">Data Science & AI</option>
+                    <select class="filter-select" id="statusFilter">
+                        <option value="all">All Statuses</option>
+                        <option value="Automation On">Automation On</option>
+                        <option value="Pending Sync">Pending Sync</option>
                     </select>
                 </div>
                 <div>
-                    <input type="text" class="search-input" placeholder="Search sessions or mentors...">
+                    <input type="text" class="search-input" id="timetableSearch" placeholder="Search sessions or mentors...">
                 </div>
             </div>
 
@@ -347,38 +359,7 @@
                                 <th style="text-align: right;">Actions</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            <tr>
-                                <td><strong>Monday</strong><br><span style="font-size:12px; color:var(--text-muted);">09:00 AM - 11:00 AM</span></td>
-                                <td>Advanced Network Architecture</td>
-                                <td>Dr. Samuel K.</td>
-                                <td>Lab Suite A</td>
-                                <td><span class="badge active">Automation On</span></td>
-                                <td style="text-align: right;">
-                                    <button class="btn-subtle" onclick="alert('Editing timetable slot...')">Edit</button>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td><strong>Monday</strong><br><span style="font-size:12px; color:var(--text-muted);">01:00 PM - 03:00 PM</span></td>
-                                <td>UI/UX Systems & Design Thinking</td>
-                                <td>Sarah Jenkins</td>
-                                <td>Design Studio B</td>
-                                <td><span class="badge active">Automation On</span></td>
-                                <td style="text-align: right;">
-                                    <button class="btn-subtle" onclick="alert('Editing timetable slot...')">Edit</button>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td><strong>Tuesday</strong><br><span style="font-size:12px; color:var(--text-muted);">10:30 AM - 12:30 PM</span></td>
-                                <td>Database Systems & Concurrency</td>
-                                <td>Prof. Adaeze O.</td>
-                                <td>Main Hall 2</td>
-                                <td><span class="badge scheduled">Pending Sync</span></td>
-                                <td style="text-align: right;">
-                                    <button class="btn-subtle" onclick="alert('Editing timetable slot...')">Edit</button>
-                                </td>
-                            </tr>
-                        </tbody>
+                        <tbody id="timetableTableBody"></tbody>
                     </table>
                 </div>
             </div>
@@ -386,8 +367,163 @@
         </div>
     </div>
 
+    <div class="modal" id="timetableModal" aria-hidden="true">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h2 class="modal-title">Create Timetable Entry</h2>
+                <button type="button" class="close-btn" id="closeTimetableModalBtn" aria-label="Close modal">×</button>
+            </div>
+            <form id="timetableForm">
+                <div class="form-row">
+                    <div class="field">
+                        <label for="dayInput">Day</label>
+                        <select id="dayInput" required>
+                            <option value="">Select day</option>
+                            <option value="Monday">Monday</option>
+                            <option value="Tuesday">Tuesday</option>
+                            <option value="Wednesday">Wednesday</option>
+                            <option value="Thursday">Thursday</option>
+                            <option value="Friday">Friday</option>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label for="timeInput">Time Slot</label>
+                        <input id="timeInput" type="text" value="09:00 AM - 11:00 AM" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="field" style="grid-column: 1 / -1;">
+                        <label for="courseInput">Course / Module</label>
+                        <input id="courseInput" type="text" placeholder="e.g. Digital Signal Processing" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="field">
+                        <label for="instructorInput">Instructor</label>
+                        <input id="instructorInput" type="text" placeholder="e.g. Dr. Faith Okafor" required>
+                    </div>
+                    <div class="field">
+                        <label for="venueInput">Venue</label>
+                        <input id="venueInput" type="text" placeholder="e.g. Room 204" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="field" style="grid-column: 1 / -1;">
+                        <label for="statusInput">Alert status</label>
+                        <select id="statusInput">
+                            <option value="Automation On">Automation On</option>
+                            <option value="Pending Sync">Pending Sync</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn-secondary" id="cancelTimetableBtn">Cancel</button>
+                    <button type="submit" class="btn-action">Save Timetable</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script>
-        const savedTheme = localStorage.getItem('lesson_notify_theme'); 
+        const timetableStorageKey = 'lesson_notify_timetable_entries';
+        const defaultTimetable = [
+            { id: 1, day: 'Monday', time: '09:00 AM - 11:00 AM', course: 'Advanced Network Architecture', instructor: 'Dr. Samuel K.', venue: 'Lab Suite A', status: 'Automation On' },
+            { id: 2, day: 'Monday', time: '01:00 PM - 03:00 PM', course: 'UI/UX Systems & Design Thinking', instructor: 'Sarah Jenkins', venue: 'Design Studio B', status: 'Automation On' },
+            { id: 3, day: 'Tuesday', time: '10:30 AM - 12:30 PM', course: 'Database Systems & Concurrency', instructor: 'Prof. Adaeze O.', venue: 'Main Hall 2', status: 'Pending Sync' }
+        ];
+
+        function getTimetableEntries() {
+            try {
+                const saved = JSON.parse(localStorage.getItem(timetableStorageKey) || 'null');
+                return Array.isArray(saved) && saved.length ? saved : defaultTimetable;
+            } catch (error) {
+                return defaultTimetable;
+            }
+        }
+
+        function saveTimetableEntries(entries) {
+            localStorage.setItem(timetableStorageKey, JSON.stringify(entries));
+        }
+
+        function renderTimetableTable() {
+            const tbody = document.getElementById('timetableTableBody');
+            const search = (document.getElementById('timetableSearch')?.value || '').toLowerCase();
+            const dayFilter = document.getElementById('dayFilter')?.value || 'all';
+            const statusFilter = document.getElementById('statusFilter')?.value || 'all';
+            const entries = getTimetableEntries().filter(entry => {
+                const matchesSearch = !search || [entry.day, entry.time, entry.course, entry.instructor, entry.venue].join(' ').toLowerCase().includes(search);
+                const matchesDay = dayFilter === 'all' || entry.day === dayFilter;
+                const matchesStatus = statusFilter === 'all' || entry.status === statusFilter;
+                return matchesSearch && matchesDay && matchesStatus;
+            });
+
+            if (!entries.length) {
+                tbody.innerHTML = '<tr><td colspan="6"><div style="padding: 30px 20px; text-align: center; color: var(--text-muted);">No timetable entries match your current filters.</div></td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = entries.map(entry => `
+                <tr>
+                    <td><strong>${entry.day}</strong><br><span style="font-size:12px; color: var(--text-muted);">${entry.time}</span></td>
+                    <td>${entry.course}</td>
+                    <td>${entry.instructor}</td>
+                    <td>${entry.venue}</td>
+                    <td><span class="badge ${entry.status === 'Automation On' ? 'active' : 'scheduled'}">${entry.status}</span></td>
+                    <td style="text-align: right;"><button class="btn-subtle" type="button" onclick="removeTimetableEntry(${entry.id})">Remove</button></td>
+                </tr>
+            `).join('');
+        }
+
+        function removeTimetableEntry(id) {
+            const next = getTimetableEntries().filter(entry => entry.id !== id);
+            saveTimetableEntries(next);
+            renderTimetableTable();
+        }
+
+        function openTimetableModal() {
+            const modal = document.getElementById('timetableModal');
+            if (!modal) return;
+            modal.classList.add('open');
+            modal.setAttribute('aria-hidden', 'false');
+        }
+
+        function closeTimetableModal() {
+            const modal = document.getElementById('timetableModal');
+            if (!modal) return;
+            modal.classList.remove('open');
+            modal.setAttribute('aria-hidden', 'true');
+            document.getElementById('timetableForm').reset();
+        }
+
+        document.getElementById('openTimetableModalBtn')?.addEventListener('click', openTimetableModal);
+        document.getElementById('closeTimetableModalBtn')?.addEventListener('click', closeTimetableModal);
+        document.getElementById('cancelTimetableBtn')?.addEventListener('click', closeTimetableModal);
+
+        document.getElementById('timetableForm')?.addEventListener('submit', function (event) {
+            event.preventDefault();
+            const nextEntry = {
+                id: Date.now(),
+                day: document.getElementById('dayInput').value,
+                time: document.getElementById('timeInput').value,
+                course: document.getElementById('courseInput').value.trim(),
+                instructor: document.getElementById('instructorInput').value.trim(),
+                venue: document.getElementById('venueInput').value.trim(),
+                status: document.getElementById('statusInput').value
+            };
+
+            if (!nextEntry.day || !nextEntry.course || !nextEntry.instructor || !nextEntry.venue) return;
+            const entries = getTimetableEntries();
+            entries.unshift(nextEntry);
+            saveTimetableEntries(entries);
+            renderTimetableTable();
+            closeTimetableModal();
+        });
+
+        document.getElementById('timetableSearch')?.addEventListener('input', renderTimetableTable);
+        document.getElementById('dayFilter')?.addEventListener('change', renderTimetableTable);
+        document.getElementById('statusFilter')?.addEventListener('change', renderTimetableTable);
+
+        const savedTheme = localStorage.getItem('lesson_notify_theme');
         if (savedTheme === 'light') {
             document.body.classList.add('light-mode');
         }
@@ -397,8 +533,10 @@
 
         document.getElementById('btnLogout').addEventListener('click', () => {
             localStorage.clear();
-            window.location.href = '/login?mode=signin';
+            window.location.href = 'auth.html?mode=signin';
         });
+
+        renderTimetableTable();
     </script>
 </body>
 </html>
